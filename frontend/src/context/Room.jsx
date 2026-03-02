@@ -12,7 +12,7 @@ export const RoomProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const s = io("http://localhost:3000", { autoConnect: false });
+    const s = io("https://syncode-thpi.onrender.com", { autoConnect: false });
     setSocket(s);
     s.on("initialState", ({ users: u, code: c, lang: l }) => {
       setUsers(u || []);
