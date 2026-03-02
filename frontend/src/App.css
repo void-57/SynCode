@@ -1,0 +1,119 @@
+/* Google Fonts for Oswald, Space Mono and Inter */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&display=swap');
+
+@import "tailwindcss";
+
+/* Font utility classes used across components */
+.font-display {
+	font-family: 'Oswald', sans-serif;
+}
+
+.font-mono-custom {
+	font-family: 'Space Mono', monospace;
+}
+
+.font-body-custom {
+	font-family: 'Inter', sans-serif;
+}
+
+/* Decorative dotted background used in JoinRoom */
+.dot-bg {
+	background-image: radial-gradient(#000 1px, transparent 1px);
+	background-size: 20px 20px;
+}
+
+/* Marquee and cursor styles */
+@keyframes marquee {
+	0% {
+		transform: translateX(0);
+	}
+
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.marquee-track {
+	display: flex;
+	width: max-content;
+	animation: marquee 18s linear infinite;
+}
+
+.marquee-track span {
+	white-space: nowrap;
+	padding-right: 0;
+}
+
+@keyframes blink {
+
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0;
+	}
+}
+
+.cursor-blink::after {
+	content: '';
+	display: inline-block;
+	width: 10px;
+	height: 1em;
+	background-color: #FF3300;
+	margin-left: 4px;
+	animation: blink 1s step-end infinite;
+	vertical-align: text-bottom;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+	width: 12px;
+	height: 12px;
+}
+
+::-webkit-scrollbar-track {
+	background: #fff;
+	border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #000;
+	border: 2px solid #fff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #FF3300;
+}
+
+/* Hover handled via Tailwind utilities (hover:bg- and duration classes) */
+
+/* Focus-within handled via Tailwind utilities (removed custom .panel-focus) */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	.pb-safe {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+}
+
+@keyframes data-flow {
+	0% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+
+	50% {
+		transform: translateX(6px);
+		opacity: 0.5;
+	}
+
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+.animate-data-flow {
+	animation: data-flow 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
