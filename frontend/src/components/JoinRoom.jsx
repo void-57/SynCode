@@ -39,6 +39,8 @@ const JoinRoom = () => {
   const [connectState, setConnectState] = useState("READY");
   const [isConnecting, setIsConnecting] = useState(false);
   const [loadingText, setLoadingText] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [roomError, setRoomError] = useState("");
 
   useEffect(() => {
     if (room.joined) {
@@ -47,7 +49,39 @@ const JoinRoom = () => {
   }, [room.joined]);
 
   const toggleDark = () => setIsDark((prev) => !prev);
+  const handleNameChange = (e) => {
+    const val = e.target.value.replace(/\s/g, "");
+    if (val.length > 10) {
+      setNameError("Max 10 characters");
+      room.setUserName(val.slice(0, 10));
+    } else {
+      setNameError("");
+      room.setUserName(val);
+    }
+  };
+
+  const handleRoomChange = (e) => {
+    const val = e.target.value.replace(/\s/g, "");
+    if (val.length > 8) {
+      setRoomError("Max 8 characters");
+      room.setRoomId(val.slice(0, 8));
+    } else {
+      setRoomError("");
+      room.setRoomId(val);
+    }
+  };
+
   const joinRoom = () => {
+    let valid = true;
+    if (!room.userName) {
+      setNameError("Name is required");
+      valid = false;
+    }
+    if (!room.roomId) {
+      setRoomError("Room code is required");
+      valid = false;
+    }
+    if (!valid || isConnecting) return;
     if (room.roomId && room.userName && !isConnecting) {
       setIsConnecting(true);
       setConnectState("CONNECTING");
@@ -56,7 +90,7 @@ const JoinRoom = () => {
         "INITIALIZING WS CLIENT...",
         "NEGOTIATING ROOM ID...",
         "SYNCING DOCUMENT STATE...",
-        "ESTABLISHING PEERS..."
+        "ESTABLISHING PEERS...",
       ];
 
       let stepIndex = 0;
@@ -69,7 +103,6 @@ const JoinRoom = () => {
         }
       }, 500);
 
-
       setTimeout(() => {
         clearInterval(interval);
         setConnectState("CONNECTED");
@@ -77,35 +110,36 @@ const JoinRoom = () => {
         setTimeout(() => {
           room.joinRoom(room.roomId, room.userName);
         }, 500);
-
       }, 2000);
     }
   };
   return (
     <div
-      className={`flex flex-col min-h-screen w-full relative transition-colors duration-200 overflow-hidden ${isDark ? "bg-[#1a1a1a] text-white" : "bg-white text-black"
-        }`}
+      className={`flex flex-col min-h-screen w-full relative transition-colors duration-200 overflow-hidden ${
+        isDark ? "bg-[#1a1a1a] text-white" : "bg-white text-black"
+      }`}
     >
       <div className="absolute top-0 right-0 w-full md:w-[60%] h-full pointer-events-none overflow-hidden flex items-center justify-end z-0">
         <div
           className="absolute inset-0 transition-opacity duration-1000 pointer-events-none"
           style={{
             background: isDark
-              ? 'radial-gradient(circle at 70% 50%, rgba(255, 51, 0, 0.05) 0%, transparent 70%)'
-              : 'radial-gradient(circle at 70% 50%, rgba(255, 51, 0, 0.08) 0%, transparent 70%)',
+              ? "radial-gradient(circle at 70% 50%, rgba(255, 51, 0, 0.05) 0%, transparent 70%)"
+              : "radial-gradient(circle at 70% 50%, rgba(255, 51, 0, 0.08) 0%, transparent 70%)",
           }}
         />
         <div
           className="absolute inset-0 opacity-[0.15] md:opacity-[0.2]"
           style={{
-            backgroundImage: `radial-gradient(circle at center, ${isDark ? '#ffffff' : '#000000'} 1px, transparent 1px)`,
-            backgroundSize: '24px 24px',
-            WebkitMaskImage: 'linear-gradient(to right, transparent, black 80%)',
-            maskImage: 'linear-gradient(to right, transparent, black 80%)'
+            backgroundImage: `radial-gradient(circle at center, ${isDark ? "#ffffff" : "#000000"} 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 80%)",
+            maskImage: "linear-gradient(to right, transparent, black 80%)",
           }}
         />
         <pre
-          className={`font-mono-custom text-[8px] md:text-sm md:font-bold opacity-[0.03] md:opacity-[0.04] whitespace-pre select-none tracking-widest leading-loose transform rotate-[-4deg] scale-[1.5] translate-x-1/4 translate-y-12 transition-colors ${isDark ? 'text-white' : 'text-black'}`}
+          className={`font-mono-custom text-[8px] md:text-sm md:font-bold opacity-[0.03] md:opacity-[0.04] whitespace-pre select-none tracking-widest leading-loose transform rotate-[-4deg] scale-[1.5] translate-x-1/4 translate-y-12 transition-colors ${isDark ? "text-white" : "text-black"}`}
         >
           {`// [SYSTEM] initializing virtual DOM...
 import { createPeerConnection } from '@syncode/net';
@@ -128,10 +162,11 @@ async function bootstrap() {
       </div>
       <button
         onClick={toggleDark}
-        className={`absolute top-4 right-4 z-30 px-3 py-1.5 text-xs font-bold border-2 rounded transition-all cursor-pointer ${isDark
-          ? "border-[#444] text-[#ccc] bg-transparent hover:bg-white hover:text-black"
-          : "border-black text-black bg-transparent hover:bg-black hover:text-white"
-          }`}
+        className={`absolute top-4 right-4 z-30 px-3 py-1.5 text-xs font-bold border-2 rounded transition-all cursor-pointer ${
+          isDark
+            ? "border-[#444] text-[#ccc] bg-transparent hover:bg-white hover:text-black"
+            : "border-black text-black bg-transparent hover:bg-black hover:text-white"
+        }`}
       >
         {isDark ? "☾" : "☀︎"}
       </button>
@@ -141,7 +176,9 @@ async function bootstrap() {
           <span className="px-2 py-1 font-mono-custom text-xs uppercase tracking-widest bg-[#121212] text-white">
             System v1.0
           </span>
-          <span className={`font-mono-custom text-xs uppercase tracking-widest transition-colors ${connectState === 'CONNECTED' ? 'text-[#22c55e]' : connectState === 'CONNECTING' ? 'animate-pulse text-[#eab308]' : 'animate-pulse text-[#FF3300]'}`}>
+          <span
+            className={`font-mono-custom text-xs uppercase tracking-widest transition-colors ${connectState === "CONNECTED" ? "text-[#22c55e]" : connectState === "CONNECTING" ? "animate-pulse text-[#eab308]" : "animate-pulse text-[#FF3300]"}`}
+          >
             ● {connectState}
           </span>
         </div>
@@ -158,8 +195,9 @@ async function bootstrap() {
       </div>
 
       <div
-        className={`h-auto md:h-32 flex flex-col md:flex-row items-stretch border-t-2 border-black min-h-32 ${isDark ? "bg-[#121212] text-white" : "bg-gray-100 text-black"
-          }`}
+        className={`h-auto md:h-32 flex flex-col md:flex-row items-stretch border-t-2 border-black min-h-32 ${
+          isDark ? "bg-[#121212] text-white" : "bg-gray-100 text-black"
+        }`}
       >
         <div className="md:hidden overflow-hidden border-t-2 border-b-2 border-black bg-[#FF3300] text-white py-2">
           <div className="marquee-track font-mono-custom text-[11px]">
@@ -198,10 +236,15 @@ async function bootstrap() {
           <input
             type="text"
             value={room.userName}
-            onChange={(e) => room.setUserName(e.target.value)}
+            onChange={handleNameChange}
             placeholder="void57"
             className="font-mono-custom bg-transparent text-[1.5rem] text-white border-none outline-none w-full placeholder-[#4b5563]"
           />
+          {nameError && (
+            <span className="font-mono-custom text-[10px] text-[#FF3300] uppercase tracking-widest mt-1">
+              {nameError}
+            </span>
+          )}
         </div>
 
         <div className="flex-1 p-6 md:p-8 flex flex-col justify-center transition-colors border-b border-[#1f2937] hover:bg-[#111827] duration-200 focus-within:border-[#FF3300] group bg-[#141414] text-white">
@@ -213,30 +256,58 @@ async function bootstrap() {
             <input
               type="text"
               value={room.roomId}
-              onChange={(e) => room.setRoomId(e.target.value)}
+              onChange={handleRoomChange}
               placeholder="180301"
               className="font-mono-custom bg-transparent text-[1.5rem] text-white border-none outline-none w-full placeholder-[#4b5563]"
             />
           </div>
+          {roomError && (
+            <span className="font-mono-custom text-[10px] text-[#FF3300] uppercase tracking-widest mt-1">
+              {roomError}
+            </span>
+          )}
         </div>
 
         <button
           onClick={joinRoom}
           disabled={isConnecting}
-          className={`w-full py-6 md:w-64 flex items-center justify-center gap-4 group transition-all cursor-pointer duration-300 text-white font-bold uppercase ${room.joined || isConnecting ? "bg-[#cc2900] cursor-not-allowed" : "bg-[#FF3300] hover:bg-white hover:text-[#121212]"
-            }`}
+          className={`w-full py-6 md:w-64 flex items-center justify-center gap-4 group transition-all cursor-pointer duration-300 text-white font-bold uppercase ${
+            room.joined || isConnecting
+              ? "bg-[#cc2900] cursor-not-allowed"
+              : "bg-[#FF3300] hover:bg-white hover:text-[#121212]"
+          }`}
         >
           {isConnecting ? (
             <div className="flex items-center gap-3 font-mono-custom text-[10px] md:text-xs tracking-widest px-4 w-full justify-center">
-              <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4 text-white shrink-0"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
-              <span className="text-left w-36 md:w-44 truncate">{loadingText}</span>
+              <span className="text-left w-36 md:w-44 truncate">
+                {loadingText}
+              </span>
             </div>
           ) : (
             <>
-              <span className="font-display text-[1.5rem] tracking-widest">Connect</span>
+              <span className="font-display text-[1.5rem] tracking-widest">
+                Connect
+              </span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 transform group-hover:translate-x-1 transition-transform shrink-0"
