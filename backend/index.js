@@ -2,6 +2,36 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
+
+// Self-hosted Piston API
+const PISTON_URL = process.env.PISTON_URL || "http://localhost:2000/api/v2/execute";
+
+const LANG_MAP = {
+  js: "javascript",
+  ts: "typescript",
+  py: "python",
+  go: "go",
+  rs: "rust",
+  java: "java",
+  cpp: "c++",
+  c: "c",
+  rb: "ruby",
+};
+
+const EXT_MAP = {
+  js: "js",
+  ts: "ts",
+  py: "py",
+  go: "go",
+  rs: "rs",
+  java: "java",
+  cpp: "cpp",
+  c: "c",
+  rb: "rb",
+};
 
 const app = express();
 const server = http.createServer(app);
@@ -81,6 +111,39 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("userStoppedTyping", { userName });
   });
 
+  socket.on("compileCode", async ({ roomId, lang, code, stdin }) => {
+    const room = roomsData.get(roomId);
+    const language = LANG_MAP[lang];
+
+    if (!language) {
+      io.to(roomId).emit(
+        "codeResponse",
+        `Language "${lang}" is not executable.`,
+      );
+      return;
+    }
+
+    try {
+      const response = await axios.post(PISTON_URL, {
+        language,
+        version: "*",
+        files: [{ name: `main.${EXT_MAP[lang] || "txt"}`, content: code }],
+        stdin: stdin || "",
+      });
+
+      const { run, compile } = response.data;
+      const output =
+        run?.output || compile?.output || compile?.stderr || "(no output)";
+
+      if (room) room.output = output;
+      io.to(roomId).emit("codeResponse", output);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Execution failed.";
+      io.to(roomId).emit("codeResponse", `Error: ${msg}`);
+    }
+  });
+
   // When a client disconnects
   socket.on("disconnect", () => {
     if (currentRoom && roomsData.has(currentRoom)) {
@@ -105,8 +168,8 @@ io.on("connection", (socket) => {
   });
 });
 const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "frontend","dist")));
-app.get( (req, res) => {
+app.use(express.static(path.join(__dirname, "frontend", "dist")));
+app.get((req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
 const PORT = process.env.PORT || 3000;

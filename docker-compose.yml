@@ -1,0 +1,64 @@
+name: piston
+
+
+#
+# Piston API URLs
+# http://piston:2000/api/v2/runtimes
+# http://piston:2000/api/v2/execute
+# http://piston:2000/api/v2/packages
+#
+# https://piston.readthedocs.io/en/latest/api-v2/
+
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: piston
+    hostname: piston
+    volumes:
+      - piston_packages:/piston/packages
+    privileged: true  # Required to create isolated execution environments 
+    ports:
+      - "2000:2000"
+    networks:
+      piston:
+    restart: always
+
+  piston_installer:
+    image: alpine
+    container_name: piston_installer
+    command:
+      - /bin/sh
+      - -c
+      - |
+          apk add --no-cache curl
+
+          echo 'Waiting for Piston API to start...'
+          until curl -s http://piston:2000/api/v2/runtimes > /dev/null; do
+            sleep 2
+          done
+
+          echo 'Piston API is up! Installing languages...'
+
+          for lang in node typescript python go rust java gcc ruby; do
+            echo "Installing $$lang..."
+            curl -s -X POST http://piston:2000/api/v2/packages \
+              -H 'Content-Type: application/json' \
+              -d "{\"language\": \"$$lang\", \"version\": \"*\"}"
+            echo ""
+          done
+
+          echo 'All languages installed!'
+    networks:
+      piston:
+    depends_on:
+      - piston
+    restart: no
+
+networks:
+  piston:
+    name: piston
+    driver: bridge
+
+volumes:
+  piston_packages:
+    name: piston_packages
