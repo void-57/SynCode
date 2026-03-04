@@ -168,6 +168,15 @@ io.on("connection", (socket) => {
   });
 });
 const __dirname = path.resolve();
+
+// Serve different OG image based on crawler user agent
+// WhatsApp crops to a square, so serve the square logo; others get the full banner
+app.get('/og-image', (req, res) => {
+  const ua = req.headers['user-agent'] || '';
+  const file = /whatsapp/i.test(ua) ? 'logo.png' : 'og-image.png';
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', file));
+});
+
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
 app.get((req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
