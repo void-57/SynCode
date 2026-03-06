@@ -169,6 +169,11 @@ io.on("connection", (socket) => {
 });
 const __dirname = path.resolve();
 
+// health check route for Uptime Robot
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // Serve different OG image based on crawler user agent
 // WhatsApp crops to a square, so serve the square logo; others get the full banner
 app.get('/og-image', (req, res) => {
