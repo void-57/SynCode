@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { RoomContext } from "../context/Room";
+import { FaGithub } from "react-icons/fa";
 
 const UserItem = ({ user, isDark }) => {
   const [hovered, setHovered] = useState(false);
@@ -160,16 +161,31 @@ async function bootstrap() {
 }`}
         </pre>
       </div>
-      <button
-        onClick={toggleDark}
-        className={`absolute top-4 right-4 z-30 px-3 py-1.5 text-xs font-bold border-2 rounded transition-all cursor-pointer ${
-          isDark
-            ? "border-[#444] text-[#ccc] bg-transparent hover:bg-white hover:text-black"
-            : "border-black text-black bg-transparent hover:bg-black hover:text-white"
-        }`}
-      >
-        {isDark ? "☾" : "☀︎"}
-      </button>
+      <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+        <a
+          href="https://github.com/void-57"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center justify-center px-3 py-1.5 border-2 rounded transition-all ${
+            isDark
+              ? "border-[#444] text-[#ccc] bg-transparent hover:bg-white hover:text-black"
+              : "border-black text-black bg-transparent hover:bg-black hover:text-white"
+          }`}
+          aria-label="GitHub Profile"
+        >
+          <FaGithub size={16} />
+        </a>
+        <button
+          onClick={toggleDark}
+          className={`px-3 py-1.5 text-xs font-bold border-2 rounded transition-all cursor-pointer ${
+            isDark
+              ? "border-[#444] text-[#ccc] bg-transparent hover:bg-white hover:text-black"
+              : "border-black text-black bg-transparent hover:bg-black hover:text-white"
+          }`}
+        >
+          {isDark ? "☾" : "☀︎"}
+        </button>
+      </div>
 
       <div className="grow flex flex-col justify-center px-8 md:px-16 lg:px-24 z-10 relative">
         <div className="mb-4 flex items-center gap-4">
